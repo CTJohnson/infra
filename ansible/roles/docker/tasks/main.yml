@@ -21,6 +21,14 @@
   when: ansible_os_family == "Debian"
   tags: [docker, become]
 
+- name: Remove conflicting Ubuntu docker-compose-v2 package
+  ansible.builtin.apt:
+    name: docker-compose-v2
+    state: absent
+  become: true
+  when: ansible_os_family == "Debian"
+  tags: [docker, become]
+
 - name: Install Docker packages (Debian/Ubuntu)
   ansible.builtin.apt:
     name:
