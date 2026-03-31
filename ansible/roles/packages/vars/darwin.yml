@@ -24,15 +24,27 @@ brew_formulae:
   - fzf            # fuzzy finder
   - the_silver_searcher  # ag (used in agfzf/vg shell functions)
   - antidote       # zsh plugin manager
+  # Editor + shell
+  - neovim
+  - starship
+  - lazygit
+  - lazydocker
+  - tree-sitter
   # Dev
   - go
   - rustup
   - python@3.12
+  - uv            # fast Python package manager
   - node
   - mise          # polyglot version manager
+  - gh            # GitHub CLI
+  - glab          # GitLab CLI
+  - git-filter-repo
   # Cloud / Data
   - awscli
   - azure-cli
+  - cloudflared
+  - mosh          # mobile shell (SSH over UDP)
   # Containers
   - colima        # Docker runtime for macOS without Docker Desktop
   - docker
@@ -43,8 +55,11 @@ brew_formulae:
   # Disk / system
   - dua-cli
   - dust
+  # Media / misc
+  - ffmpeg
+  - yt-dlp
 
 brew_casks:
-  - wezterm       # or whatever terminal you prefer
+  - ghostty       # terminal
   - visual-studio-code
   - 1password-cli
