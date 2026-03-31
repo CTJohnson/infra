@@ -14,13 +14,44 @@
 
 - name: Verify chezmoi is available
   ansible.builtin.command: chezmoi --version
-  register: chezmoi_version
+  register: chezmoi_version_out
   changed_when: false
   tags: [chezmoi]
 
 - name: Display chezmoi version
   ansible.builtin.debug:
-    msg: "chezmoi {{ chezmoi_version.stdout }}"
+    msg: "chezmoi {{ chezmoi_version_out.stdout }}"
+  tags: [chezmoi]
+
+# Pre-write chezmoi config so promptStringOnce/promptBoolOnce never block in
+# non-interactive (Ansible) runs. promptXOnce only prompts if the key is absent.
+- name: Ensure chezmoi config directory exists
+  ansible.builtin.file:
+    path: "{{ xdg_config_home }}/chezmoi"
+    state: directory
+    mode: "0700"
+  tags: [chezmoi]
+
+- name: Write chezmoi config (pre-populate to skip interactive prompts)
+  ansible.builtin.copy:
+    dest: "{{ xdg_config_home }}/chezmoi/chezmoi.toml"
+    mode: "0600"
+    content: |
+      [data]
+          name          = {{ chezmoi_full_name | quote }}
+          email         = {{ chezmoi_email | quote }}
+          work          = {{ chezmoi_work }}
+          machine_class = {{ chezmoi_machine_class | quote }}
+          os            = {{ ansible_system | lower | quote }}
+          arch          = {{ ansible_architecture | quote }}
+          hostname      = {{ ansible_hostname | quote }}
+
+      [git]
+          autoCommit = true
+          autoPush   = false
+
+      [diff]
+          pager = "less -R"
   tags: [chezmoi]
 
 - name: Initialize chezmoi (if not already initialized)

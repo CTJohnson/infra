@@ -11,6 +11,13 @@ xdg_data_home: "{{ user_home }}/.local/share"
 chezmoi_version: "latest"  # or pin: "2.52.0"
 chezmoi_github_user: "ctjohnson"
 
+# chezmoi config — pre-written by Ansible so prompts never fire in non-interactive mode
+# Override per host in inventory/host_vars/<hostname>.yml
+chezmoi_full_name: "Christopher Johnson"
+chezmoi_email: "cjgogreen@gmail.com"
+chezmoi_work: "false"
+chezmoi_machine_class: "server"  # default for headless machines; override for laptops/workstations
+
 # Common packages wanted everywhere (platform-specific lists in roles)
 common_tools:
   - git

@@ -52,7 +52,7 @@ dot_config/waybar
 dot_config/environment.d
 {{- end }}
 
-{{- if not .work }}
+{{- if not (default false .work) }}
 # Exclude work configs on personal machines
 dot_config/work
 {{- end }}
