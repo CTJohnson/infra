@@ -1,0 +1,57 @@
+---
+# roles/packages/tasks/main.yml — install packages per platform
+
+- name: Include platform-specific package list
+  ansible.builtin.include_vars:
+    file: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_os_family | lower }}.yml"
+    - "default.yml"
+  tags: [packages]
+
+# --- macOS (Homebrew) ---
+- name: Update Homebrew
+  community.general.homebrew:
+    update_homebrew: true
+  when: ansible_os_family == "Darwin"
+  tags: [packages]
+
+- name: Install Homebrew formulae
+  community.general.homebrew:
+    name: "{{ brew_formulae }}"
+    state: present
+  when: ansible_os_family == "Darwin" and brew_formulae is defined
+  tags: [packages]
+
+- name: Install Homebrew casks
+  community.general.homebrew_cask:
+    name: "{{ brew_casks }}"
+    state: present
+  when: ansible_os_family == "Darwin" and brew_casks is defined
+  tags: [packages]
+
+# --- Debian/Ubuntu (apt) ---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: ansible_os_family == "Debian"
+  tags: [packages, become]
+
+- name: Install apt packages
+  ansible.builtin.apt:
+    name: "{{ apt_packages }}"
+    state: present
+  become: true
+  when: ansible_os_family == "Debian" and apt_packages is defined
+  tags: [packages, become]
+
+# --- Arch (pacman) ---
+- name: Install pacman packages
+  community.general.pacman:
+    name: "{{ pacman_packages }}"
+    state: present
+  become: true
+  when: ansible_os_family == "Archlinux" and pacman_packages is defined
+  tags: [packages, become]

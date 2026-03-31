@@ -1,0 +1,38 @@
+---
+# roles/dev-tools/tasks/main.yml — language toolchains and dev utilities
+
+# mise (polyglot version manager - replaces asdf)
+- name: Install mise (Linux)
+  ansible.builtin.shell: |
+    curl https://mise.run | sh
+  args:
+    creates: "{{ user_home }}/.local/bin/mise"
+  when: ansible_os_family != "Darwin"
+  tags: [dev-tools]
+
+- name: Install mise (macOS via brew)
+  community.general.homebrew:
+    name: mise
+    state: present
+  when: ansible_os_family == "Darwin"
+  tags: [dev-tools]
+
+# Rust via rustup (if not already installed by brew)
+- name: Install Rust toolchain (Linux)
+  ansible.builtin.shell: |
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+  args:
+    creates: "{{ user_home }}/.cargo/bin/rustc"
+  when: ansible_os_family != "Darwin" and dev_languages.rust
+  tags: [dev-tools]
+
+# Claude Code CLI (you use this in VS Code)
+- name: Install Claude Code CLI via npm
+  ansible.builtin.shell: |
+    npm install -g @anthropic-ai/claude-code
+  args:
+    creates: /usr/local/bin/claude
+  become: "{{ ansible_os_family != 'Darwin' }}"
+  when: dev_languages.node
+  tags: [dev-tools]
+  ignore_errors: true  # non-critical if npm not yet available

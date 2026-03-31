@@ -1,0 +1,27 @@
+---
+# site.yml — main playbook
+# Usage:
+#   ansible-playbook site.yml --ask-become-pass          # full run
+#   ansible-playbook site.yml --tags packages             # just packages
+#   ansible-playbook site.yml --tags dotfiles --skip-tags become  # no sudo needed
+
+- name: Provision workstation
+  hosts: local
+  gather_facts: true
+
+  pre_tasks:
+    - name: Display detected system info
+      ansible.builtin.debug:
+        msg: >-
+          {{ ansible_distribution }} {{ ansible_distribution_version }}
+          ({{ ansible_architecture }}) — {{ ansible_hostname }}
+      tags: always
+
+  roles:
+    - { role: common,    tags: [common, always] }
+    - { role: packages,  tags: [packages] }
+    - { role: shell,     tags: [shell, dotfiles] }
+    - { role: dev-tools, tags: [dev-tools] }
+    - { role: docker,    tags: [docker] }
+    - { role: ssh,       tags: [ssh] }
+    - { role: chezmoi,   tags: [chezmoi, dotfiles] }

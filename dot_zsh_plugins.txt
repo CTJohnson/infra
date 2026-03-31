@@ -1,0 +1,11 @@
+# Core completions & productivity
+zsh-users/zsh-completions path:src kind:fpath
+zsh-users/zsh-autosuggestions
+zsh-users/zsh-history-substring-search
+
+# File & search utilities
+roosta/fif
+junegunn/fzf path:shell   # <-- adds Ctrl-R, Ctrl-T, Alt-C keybindings
+
+# Visual (must be last)
+zsh-users/zsh-syntax-highlighting

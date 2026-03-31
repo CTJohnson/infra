@@ -1,0 +1,4 @@
+# .chezmoiexternal.toml — external dependencies managed by chezmoi
+#
+# Zsh plugins are managed by antidote (reads ~/.zsh_plugins.txt).
+# Add external non-plugin tools here if needed in future.

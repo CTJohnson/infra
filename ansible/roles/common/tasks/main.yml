@@ -1,0 +1,32 @@
+---
+# roles/common/tasks/main.yml — ensure basic system sanity
+
+- name: Ensure XDG directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ xdg_config_home }}"
+    - "{{ xdg_data_home }}"
+    - "{{ user_home }}/.local/bin"
+    - "{{ user_home }}/.local/state"
+    - "{{ user_home }}/.cache"
+  tags: [common]
+
+- name: Set timezone (Linux only)
+  ansible.builtin.timezone:
+    name: "{{ system_timezone }}"
+  become: true
+  when: ansible_os_family != "Darwin"
+  tags: [common, become]
+
+- name: Ensure locale is set (Debian/Ubuntu)
+  ansible.builtin.locale_gen:
+    name: "{{ item }}"
+    state: present
+  become: true
+  loop:
+    - en_US.UTF-8
+  when: ansible_os_family == "Debian"
+  tags: [common, become]

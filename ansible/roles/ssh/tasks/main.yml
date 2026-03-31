@@ -1,0 +1,24 @@
+---
+# roles/ssh/tasks/main.yml — SSH key setup and config
+
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: "{{ user_home }}/.ssh"
+    state: directory
+    mode: "0700"
+  tags: [ssh]
+
+- name: Generate SSH key if not present
+  community.crypto.openssh_keypair:
+    path: "{{ user_home }}/.ssh/id_ed25519"
+    type: ed25519
+    comment: "{{ user_name }}@{{ ansible_hostname }}"
+  tags: [ssh]
+  ignore_errors: true  # community.crypto may not be installed yet
+
+- name: Set SSH config permissions
+  ansible.builtin.file:
+    path: "{{ user_home }}/.ssh/config"
+    state: touch
+    mode: "0600"
+  tags: [ssh]

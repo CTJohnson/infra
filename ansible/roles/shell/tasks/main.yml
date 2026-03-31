@@ -1,0 +1,40 @@
+---
+# roles/shell/tasks/main.yml — zsh + starship setup
+
+- name: Install zsh (Linux)
+  ansible.builtin.apt:
+    name: zsh
+    state: present
+  become: true
+  when: ansible_os_family == "Debian"
+  tags: [shell, become]
+
+- name: Install zsh (macOS)
+  community.general.homebrew:
+    name: zsh
+    state: present
+  when: ansible_os_family == "Darwin"
+  tags: [shell]
+
+- name: Set zsh as default shell
+  ansible.builtin.user:
+    name: "{{ user_name }}"
+    shell: "{{ '/opt/homebrew/bin/zsh' if ansible_os_family == 'Darwin' else '/usr/bin/zsh' }}"
+  become: true
+  tags: [shell, become]
+
+- name: Install starship prompt
+  ansible.builtin.shell: |
+    curl -sS https://starship.rs/install.sh | sh -s -- --yes
+  args:
+    creates: /usr/local/bin/starship
+  become: true
+  when: ansible_os_family != "Darwin"
+  tags: [shell, become]
+
+- name: Install starship via brew (macOS)
+  community.general.homebrew:
+    name: starship
+    state: present
+  when: ansible_os_family == "Darwin"
+  tags: [shell]

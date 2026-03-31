@@ -1,0 +1,33 @@
+---
+# group_vars/all.yml — variables shared across all machines
+
+user_name: ctjohnson
+user_home: "{{ ansible_env.HOME }}"
+system_timezone: "Europe/Zurich"  # override per host in inventory host_vars if needed
+xdg_config_home: "{{ user_home }}/.config"
+xdg_data_home: "{{ user_home }}/.local/share"
+
+# chezmoi gets installed by Ansible, then manages dotfiles independently
+chezmoi_version: "latest"  # or pin: "2.52.0"
+chezmoi_github_user: "ctjohnson"
+
+# Common packages wanted everywhere (platform-specific lists in roles)
+common_tools:
+  - git
+  - curl
+  - wget
+  - jq
+  - ripgrep
+  - fd-find     # fd on brew, fd-find on apt
+  - bat
+  - htop
+  - tmux
+  - tree
+  - unzip
+
+# Dev toolchain
+dev_languages:
+  go: true
+  rust: true
+  python: true
+  node: true      # via mise/asdf, not system

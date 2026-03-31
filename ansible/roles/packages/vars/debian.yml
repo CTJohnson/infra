@@ -1,0 +1,29 @@
+---
+# roles/packages/vars/debian.yml — Debian/Ubuntu (apt)
+
+apt_packages:
+  # Core utils
+  - git
+  - curl
+  - wget
+  - jq
+  - ripgrep
+  - fd-find
+  - bat
+  - htop
+  - tmux
+  - tree
+  - unzip
+  - zstd
+  - build-essential
+  - ca-certificates
+  - gnupg
+  - lsb-release
+  # Python (system python for ansible, mise handles dev python)
+  - python3
+  - python3-pip
+  - python3-venv
+  # Useful
+  - strace
+  - net-tools
+  - dnsutils

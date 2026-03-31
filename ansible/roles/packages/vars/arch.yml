@@ -1,0 +1,28 @@
+---
+# roles/packages/vars/arch.yml — Arch Linux (pacman)
+
+pacman_packages:
+  # Core utils
+  - git
+  - curl
+  - wget
+  - jq
+  - ripgrep
+  - fd
+  - bat
+  - htop
+  - btop
+  - tmux
+  - tree
+  - unzip
+  - zstd
+  - base-devel
+  - ca-certificates
+  # Python (system python for ansible; mise handles dev python)
+  - python
+  - python-pip
+  # Useful
+  - strace
+  - net-tools
+  - bind           # dig
+  - eza            # modern ls (in AUR on older Arch, community on newer)

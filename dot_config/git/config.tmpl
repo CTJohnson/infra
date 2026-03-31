@@ -1,0 +1,52 @@
+[user]
+    name = {{ .name }}
+    email = {{ .email }}
+
+[init]
+    defaultBranch = main
+
+[core]
+    editor = nvim
+    autocrlf = input
+{{- if eq .chezmoi.os "darwin" }}
+    fsmonitor = true
+{{- end }}
+
+[pull]
+    rebase = true
+
+[push]
+    autoSetupRemote = true
+    default = current
+
+[fetch]
+    prune = true
+
+[diff]
+    algorithm = histogram
+    colorMoved = default
+
+[merge]
+    conflictstyle = zdiff3
+
+[rerere]
+    enabled = true
+
+[alias]
+    st = status -sb
+    co = checkout
+    br = branch
+    lg = log --oneline --graph --decorate --all -20
+    unstage = reset HEAD --
+    last = log -1 HEAD --stat
+    wt = worktree
+
+{{- if .work }}
+
+# Work-specific includes
+[includeIf "gitdir:~/work/"]
+    path = ~/.config/git/config-work
+{{- end }}
+
+[url "git@github.com:"]
+    insteadOf = https://github.com/

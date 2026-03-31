@@ -1,0 +1,257 @@
+# ~/.zshrc — managed by chezmoi
+# Machine: {{ .chezmoi.hostname }} ({{ .chezmoi.os }}/{{ .chezmoi.arch }}, class: {{ .machine_class }})
+
+# --- Profiling toggle (ZSH_PROFILE=1 zsh to enable) ---
+[[ -n "$ZSH_PROFILE" ]] && {
+  zmodload zsh/datetime 2>/dev/null
+  zmodload zsh/zprof 2>/dev/null
+  typeset -gA __ZTIMES
+  typeset -ga __ZSEQ
+  __ZSTART=$EPOCHREALTIME
+  __zmark() { local k="$1"; __ZTIMES[$k]="$EPOCHREALTIME"; __ZSEQ+=("$k") }
+  __zreport() {
+    local last=$__ZSTART
+    print "\n=== ZSH STARTUP TIMELINE (ms) ==="
+    for k in "${__ZSEQ[@]}"; do
+      printf "%-28s %8.2f ms\n" "$k" $(((${__ZTIMES[$k]} - last) * 1000))
+      last=${__ZTIMES[$k]}
+    done
+    printf "%-28s %8.2f ms\n" "TOTAL" $((($EPOCHREALTIME - $__ZSTART) * 1000))
+    whence zprof >/dev/null && { print "\n=== ZPROF ===" && zprof }
+  }
+  __zmark "00 - start"
+}
+
+# --- XDG ---
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+
+# --- History ---
+HISTFILE="$HOME/.zsh_history"
+export HISTSIZE=20000000
+export SAVEHIST=20000000
+setopt AUTO_CD AUTO_PUSHD EXTENDED_GLOB NOMATCH MENU_COMPLETE GLOB_DOTS \
+  INTERACTIVE_COMMENTS NO_CLOBBER INC_APPEND_HISTORY_TIME HIST_EXPIRE_DUPS_FIRST \
+  HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE HIST_VERIFY SHARE_HISTORY \
+  HIST_REDUCE_BLANKS EXTENDED_HISTORY APPEND_HISTORY
+unsetopt BEEP
+
+# --- PATH ---
+typeset -U path
+path=(
+    $HOME/bin
+    $HOME/.local/bin
+    /usr/local/bin
+    /usr/local/go/bin
+    $HOME/.cargo/bin
+    $HOME/tmp/bin
+{{- if eq .chezmoi.os "darwin" }}
+    /opt/homebrew/bin
+    /opt/homebrew/sbin
+{{- end }}
+    $path
+)
+
+# Volta (Node version manager)
+export VOLTA_HOME="${VOLTA_HOME:-$HOME/.volta}"
+[[ -d "$VOLTA_HOME/bin" ]] && path=("$VOLTA_HOME/bin" $path)
+
+# --- Editor ---
+if [[ -n $SSH_CONNECTION ]]; then
+  export EDITOR='vim'
+else
+  export EDITOR='nvim'
+fi
+export VISUAL="$EDITOR"
+
+# --- Starship config path ---
+export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
+
+[[ -n "$ZSH_PROFILE" ]] && __zmark "10 - env+paths done"
+
+# --- Antidote: plugin manager ---
+{{- if eq .chezmoi.os "darwin" }}
+source "$(brew --prefix)/opt/antidote/share/antidote/antidote.zsh"
+{{- else }}
+# Linux: installed via https://getantidote.github.io
+ANTIDOTE_HOME="${XDG_DATA_HOME}/antidote"
+[[ -f "$ANTIDOTE_HOME/antidote.zsh" ]] && source "$ANTIDOTE_HOME/antidote.zsh"
+{{- end }}
+antidote load "$HOME/.zsh_plugins.txt"
+
+[[ -n "$ZSH_PROFILE" ]] && __zmark "20 - antidote loaded"
+
+# --- Vi mode + keybindings ---
+bindkey -v
+zmodload zsh/terminfo
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search edit-command-line
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+zle -N edit-command-line
+
+bindkey -M viins "${terminfo[kcuu1]}" up-line-or-beginning-search
+bindkey -M viins "${terminfo[kcud1]}" down-line-or-beginning-search
+bindkey -M viins '^[[A' up-line-or-beginning-search
+bindkey -M viins '^[[B' down-line-or-beginning-search
+bindkey -M viins '^[OA' up-line-or-beginning-search
+bindkey -M viins '^[OB' down-line-or-beginning-search
+bindkey -M viins '^P' up-line-or-beginning-search
+bindkey -M viins '^N' down-line-or-beginning-search
+bindkey -M vicmd 'v' edit-command-line
+ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(up-line-or-beginning-search down-line-or-beginning-search)
+
+# --- Completion ---
+autoload -Uz compinit
+export ZSH_COMPDUMP="$HOME/.cache/zsh/.zcompdump-$ZSH_VERSION"
+mkdir -p "${ZSH_COMPDUMP:h}"
+compinit -C -d "$ZSH_COMPDUMP"
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*:*:*:*:descriptions' format '%F{green}-- %d --%f'
+zmodload zsh/complist
+_comp_options+=(globdots)
+
+[[ -n "$ZSH_PROFILE" ]] && __zmark "30 - compinit done"
+
+# --- Docker completions (cached) ---
+__load_docker_completion() {
+  local cache_dir="$HOME/.cache"
+  mkdir -p "$cache_dir"
+  local docker_c="$cache_dir/docker-completion.zsh"
+  local compose_c="$cache_dir/docker-compose-completion.zsh"
+  _gen_comp() {
+    local cmd="$1" out="$2"
+    ( umask 022; eval "$cmd" >"$out.tmp" 2>/dev/null ) || { rm -f "$out.tmp"; return 1 }
+    if grep -Eq '(^#compdef|compdef[[:space:]]+_docker|_docker[[:space:]]*\(\)|_docker-compose[[:space:]]*\(\))' "$out.tmp"; then
+      mv "$out.tmp" "$out"; return 0
+    fi
+    rm -f "$out.tmp"; return 1
+  }
+  if command -v docker >/dev/null 2>&1; then
+    [[ ! -s "$docker_c" || "$(command -v docker)" -nt "$docker_c" ]] && _gen_comp "docker completion zsh" "$docker_c"
+    [[ -r "$docker_c" ]] && source "$docker_c"
+    [[ ! -s "$compose_c" || "$(command -v docker)" -nt "$compose_c" ]] && _gen_comp "docker compose completion zsh" "$compose_c" || true
+  fi
+  if [[ ! -r "$compose_c" ]] && command -v docker-compose >/dev/null 2>&1; then
+    [[ ! -s "$compose_c" || "$(command -v docker-compose)" -nt "$compose_c" ]] && _gen_comp "docker-compose completion zsh" "$compose_c" || true
+  fi
+  [[ -r "$compose_c" ]] && source "$compose_c"
+}
+__load_docker_completion
+
+[[ -n "$ZSH_PROFILE" ]] && __zmark "35 - docker completions"
+
+# --- Aliases ---
+# Git
+alias gs='git status -sb'
+alias ga='git add'
+alias gc='git commit'
+alias gca='git commit -a'
+alias gco='git checkout'
+alias gcb='git checkout -b'
+alias gp='git push'
+alias gl='git pull --ff-only'
+alias gd='git diff'
+alias gds='git diff --staged'
+alias glg='git log --oneline --graph --decorate'
+alias gwt='git worktree'
+
+# Tmux
+alias ta='tmux attach -t'
+alias tls='tmux ls'
+alias tns='tmux new -s'
+
+# Modern replacements
+alias cat='bat'
+alias ls='eza --header --long --all --git --icons'
+alias l='eza --long --header --icons'
+alias lst='eza --long --header --icons --tree --level=3'
+alias grep='rg'
+alias find='fd'
+
+{{- if eq .chezmoi.os "darwin" }}
+alias brewup='brew update && brew upgrade && brew cleanup'
+alias flushdns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
+{{- end }}
+
+{{- if eq .chezmoi.os "linux" }}
+alias apt-up='sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y'
+{{- if ne .machine_class "server" }}
+alias pbcopy='xclip -selection clipboard'
+alias pbpaste='xclip -selection clipboard -o'
+{{- end }}
+{{- end }}
+
+alias tmux_killer="tmux ls -F '#S' | fzf --multi --preview 'tmux list-windows -t {}' | xargs -I {} tmux kill-session -t {}"
+alias pyhttp='python3 -m http.server'
+
+# --- Functions ---
+function th() { tmux new -s "${PWD##*/}" "$@"; }
+
+function agfzf() {
+  [[ -n $1 ]] && cd "$1"
+  local IFS=$'\n'
+  local selected=($(
+    fzf -m -e --ansi --disabled --reverse --print-query \
+      --bind "change:reload:ag -i -l --hidden {q} || true" \
+      --preview "ag -i --color --context=2 {q} {}"
+  ))
+  [[ -n $selected ]] && { print "opening:" $selected[2]; nvim -- $selected[2] }
+}
+
+function vg() {
+  local file line
+  read -r file line <<<"$(ag --nobreak --noheading "$@" | fzf -0 -1 | awk -F: '{print $1, $2}')"
+  [[ -n $file ]] && nvim "$file" +$line
+}
+
+pyclean() {
+  find . -type f -name '*.py[co]' -delete 2>/dev/null
+  find . -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null
+}
+
+# --- fzf history widget (vi-mode aware, tmux-safe) ---
+fzf-history-widget() {
+  emulate -L zsh
+  setopt extendedglob
+  command -v fzf >/dev/null 2>&1 || { zle -M "fzf not found"; return 1 }
+  builtin fc -A
+  builtin fc -R
+  local selected
+  selected=$(builtin fc -ln 1 | fzf +s --tac --no-sort --tiebreak=index --query="$LBUFFER") || return
+  LBUFFER=$selected
+  zle redisplay
+}
+zle -N fzf-history-widget
+bindkey -M viins '^R' fzf-history-widget
+bindkey -M vicmd '^R' fzf-history-widget
+
+ZSH_AUTOSUGGEST_STRATEGY=(completion)
+
+[[ -n "$ZSH_PROFILE" ]] && __zmark "40 - aliases+funcs done"
+
+# --- Tool inits ---
+command -v zoxide   >/dev/null && eval "$(zoxide init zsh)"
+command -v starship >/dev/null && eval "$(starship init zsh)"
+command -v mise     >/dev/null && eval "$(mise activate zsh)"
+
+[[ -n "$ZSH_PROFILE" ]] && __zmark "50 - tool inits done"
+
+# --- Angular CLI completion (cached, non-blocking) ---
+__load_ng_completion_cache() {
+  command -v ng >/dev/null 2>&1 || return 0
+  local _NGC="$HOME/.cache/ng-completion.zsh"
+  if [[ ! -s "$_NGC" || "$(command -v ng)" -nt "$_NGC" ]]; then
+    ( umask 022; ng completion script >"$_NGC" 2>/dev/null ) &
+  fi
+  [[ -r "$_NGC" ]] && source "$_NGC"
+}
+__load_ng_completion_cache
+
+[[ -n "$ZSH_PROFILE" ]] && { __zmark "60 - done"; __zreport }
+
+# --- Local overrides (not managed by chezmoi) ---
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local

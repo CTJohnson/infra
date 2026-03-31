@@ -1,0 +1,6 @@
+---
+collections:
+  - name: community.general    # homebrew, pipx, snap, etc.
+    version: ">=9.0.0"
+  - name: ansible.posix        # sysctl, authorized_key, etc.
+    version: ">=1.5.0"

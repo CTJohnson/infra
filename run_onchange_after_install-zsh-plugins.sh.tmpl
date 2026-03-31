@@ -1,0 +1,10 @@
+#!/bin/bash
+# run_onchange_after_install-zsh-plugins.sh.tmpl
+# Triggered by chezmoi whenever .zsh_plugins.txt changes (antidote plugin list changes).
+# Clears the stale antidote bundle and zsh completion cache so changes take effect.
+
+echo "==> Clearing antidote bundle cache (.zsh_plugins.zsh)..."
+rm -f "{{ .chezmoi.homeDir }}/.zsh_plugins.zsh"
+echo "==> Clearing zsh completion cache..."
+rm -f "{{ .chezmoi.homeDir }}/.cache/zsh/.zcompdump-"*
+echo "==> Done. Open a new shell — antidote will rebuild its bundle automatically."

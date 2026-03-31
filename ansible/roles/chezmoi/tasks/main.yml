@@ -1,0 +1,31 @@
+---
+# roles/chezmoi/tasks/main.yml — install chezmoi, then init dotfiles
+# This is the handoff point: Ansible installs chezmoi, chezmoi manages dotfiles.
+
+- name: Install chezmoi (Linux)
+  ansible.builtin.shell: |
+    sh -c "$(curl -fsLS get.chezmoi.io)" -- -b {{ user_home }}/.local/bin
+  args:
+    creates: "{{ user_home }}/.local/bin/chezmoi"
+  when: ansible_os_family != "Darwin"
+  tags: [chezmoi]
+
+# macOS: chezmoi already installed via brew in packages role
+
+- name: Verify chezmoi is available
+  ansible.builtin.command: chezmoi --version
+  register: chezmoi_version
+  changed_when: false
+  tags: [chezmoi]
+
+- name: Display chezmoi version
+  ansible.builtin.debug:
+    msg: "chezmoi {{ chezmoi_version.stdout }}"
+  tags: [chezmoi]
+
+- name: Initialize chezmoi (if not already initialized)
+  ansible.builtin.shell: |
+    chezmoi init --apply https://github.com/{{ chezmoi_github_user }}/infra.git
+  args:
+    creates: "{{ xdg_data_home }}/chezmoi"
+  tags: [chezmoi]

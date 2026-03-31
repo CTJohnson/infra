@@ -1,0 +1,50 @@
+---
+# roles/packages/vars/darwin.yml — macOS (Homebrew)
+
+brew_formulae:
+  # Core utils
+  - git
+  - curl
+  - wget
+  - jq
+  - yq
+  - ripgrep
+  - fd
+  - bat
+  - eza          # modern ls
+  - htop
+  - btop
+  - tmux
+  - tree
+  - unzip
+  - zstd
+  - gnu-sed
+  - coreutils
+  - zoxide         # smart cd
+  - fzf            # fuzzy finder
+  - the_silver_searcher  # ag (used in agfzf/vg shell functions)
+  - antidote       # zsh plugin manager
+  # Dev
+  - go
+  - rustup
+  - python@3.12
+  - node
+  - mise          # polyglot version manager
+  # Cloud / Data
+  - awscli
+  - azure-cli
+  # Containers
+  - colima        # Docker runtime for macOS without Docker Desktop
+  - docker
+  - docker-compose
+  # Infra
+  - ansible
+  - chezmoi
+  # Disk / system
+  - dua-cli
+  - dust
+
+brew_casks:
+  - wezterm       # or whatever terminal you prefer
+  - visual-studio-code
+  - 1password-cli

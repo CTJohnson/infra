@@ -1,0 +1,51 @@
+---
+# roles/docker/tasks/main.yml — Docker setup
+
+# Linux: install Docker CE from official repo
+- name: Add Docker GPG key (Debian/Ubuntu)
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+    state: present
+  become: true
+  when: ansible_os_family == "Debian"
+  tags: [docker, become]
+
+- name: Add Docker apt repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }}]
+      https://download.docker.com/linux/{{ ansible_distribution | lower }}
+      {{ ansible_distribution_release }} stable
+    state: present
+  become: true
+  when: ansible_os_family == "Debian"
+  tags: [docker, become]
+
+- name: Install Docker packages (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+  become: true
+  when: ansible_os_family == "Debian"
+  tags: [docker, become]
+
+- name: Add user to docker group (Linux)
+  ansible.builtin.user:
+    name: "{{ user_name }}"
+    groups: docker
+    append: true
+  become: true
+  when: ansible_os_family != "Darwin"
+  tags: [docker, become]
+
+# macOS: Colima is installed via brew in packages role
+- name: Note about macOS Docker
+  ansible.builtin.debug:
+    msg: "Docker on macOS uses Colima (installed via brew). Start with: colima start"
+  when: ansible_os_family == "Darwin"
+  tags: [docker]

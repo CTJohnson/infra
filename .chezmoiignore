@@ -1,0 +1,67 @@
+README.md
+LICENSE
+
+# --- Repo-level files (not dotfiles) ---
+ansible
+migrate-from-yadm.sh
+
+# --- Generated files (never manage these) ---
+**/.DS_Store
+**/__pycache__
+**/*.pyc
+.zcompdump*
+.zsh_history
+.zsh_sessions
+.viminfo
+
+# --- Plugin managers own these directories ---
+.oh-my-zsh
+.oh-my-zsh2
+.vim/plugged
+.vim/bundle
+.config/nvim/lazy-lock.json
+.config/nvim/pack
+
+# --- App state / caches (not config) ---
+.config/joplin-desktop
+.config/TabNine
+.config/GIMP
+.config/thefuck/__pycache__
+.config/github-copilot
+.config/uv
+.config/akonadi*
+.tmux/resurrect
+
+# --- Secrets (managed by ansible ssh role, not chezmoi) ---
+.ssh/id_*
+.ssh/known_hosts*
+
+{{- if ne .chezmoi.os "darwin" }}
+# Exclude macOS-only configs on Linux
+dot_config/karabiner
+dot_config/iterm2
+dot_config/ghostty
+Library
+{{- end }}
+
+{{- if ne .chezmoi.os "linux" }}
+# Exclude Linux-only configs on macOS
+dot_config/systemd
+dot_config/sway
+dot_config/waybar
+dot_config/environment.d
+{{- end }}
+
+{{- if not .work }}
+# Exclude work configs on personal machines
+dot_config/work
+{{- end }}
+
+{{- if eq .machine_class "server" }}
+# Servers don't need GUI configs
+dot_config/wezterm
+dot_config/alacritty
+dot_config/ghostty
+dot_config/kitty
+dot_config/Code
+{{- end }}

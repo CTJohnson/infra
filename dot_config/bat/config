@@ -1,0 +1,8 @@
+# Set the pager
+--pager="less -RF"
+
+# Show line numbers, Git modifications and file header (but no grid)
+--style="numbers,changes,header"
+
+# set the theme to gruvbox
+--theme="gruvbox-dark"
