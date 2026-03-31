@@ -26,9 +26,11 @@ install_ansible_macos() {
 
 install_ansible_debian() {
     echo "==> Installing Ansible via apt..."
-    sudo apt-get update -qq
-    sudo apt-get install -y -qq software-properties-common git python3-pip
-    sudo apt-get install -y -qq ansible
+    export DEBIAN_FRONTEND=noninteractive
+    sudo -E apt-get update -y
+    sudo -E apt-get install -y software-properties-common git python3-pip python3-venv
+    # ansible from apt is often outdated — install via pip instead
+    pip3 install --user ansible --break-system-packages 2>/dev/null || pip3 install --user ansible
 }
 
 install_ansible_arch() {
