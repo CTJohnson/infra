@@ -76,7 +76,12 @@ fi
 # Run the playbook
 echo "==> Running Ansible playbook..."
 cd "$ANSIBLE_DIR"
-ansible-playbook site.yml --ask-become-pass
+# Detect whether sudo requires a password and pass --ask-become-pass only if needed
+if sudo -n true 2>/dev/null; then
+    ansible-playbook site.yml
+else
+    ansible-playbook site.yml --ask-become-pass
+fi
 
 echo ""
 echo "==> System provisioned. Now apply dotfiles:"
