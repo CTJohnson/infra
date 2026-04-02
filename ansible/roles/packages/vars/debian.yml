@@ -10,15 +10,20 @@ apt_packages:
   - ripgrep
   - fd-find
   - bat
+  - fzf
   - htop
   - tmux
   - tree
   - unzip
   - zstd
+  - zoxide
   - build-essential
   - ca-certificates
   - gnupg
   - lsb-release
+  # Editor
+  - neovim
+  - xclip
   # Python (system python for ansible, mise handles dev python)
   - python3
   - python3-pip

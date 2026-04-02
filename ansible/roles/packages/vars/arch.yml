@@ -10,14 +10,20 @@ pacman_packages:
   - ripgrep
   - fd
   - bat
+  - fzf
   - htop
   - btop
   - tmux
   - tree
   - unzip
   - zstd
+  - zoxide
   - base-devel
   - ca-certificates
+  # Editor
+  - neovim
+  - wl-clipboard
+  - xclip
   # Python (system python for ansible; mise handles dev python)
   - python
   - python-pip
